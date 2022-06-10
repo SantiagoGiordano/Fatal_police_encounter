@@ -162,3 +162,8 @@ ggplot() +
   # coord_sf(datum = NA) +
   cowplot::theme_map()
 ```
+
+
+## Source
+
+Data from [fatalencounters.org](https://fatalencounters.org)

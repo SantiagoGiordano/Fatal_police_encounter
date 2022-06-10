@@ -25,3 +25,7 @@ Which US states have the highest per capita fatal police encounters ?
     given state from the state with the lowest rate.
 
 ![](README_files/figure-gfm/levels-fig-1.png)<!-- -->
+
+## Source
+
+Data from [fatalencounters.org](https://fatalencounters.org)
