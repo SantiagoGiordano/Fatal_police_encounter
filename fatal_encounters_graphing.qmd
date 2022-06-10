@@ -1,0 +1,162 @@
+---
+title: "Masters Project Visualizations"
+subtitle: "EC528 - Crime Economics"
+author: "Santiago Giordano"
+format: 
+  html: 
+    self-contained: true
+mainfont: "Avenir Next Condensed"
+editor: visual
+---
+
+```{r ,echo=FALSE}
+library(pacman)
+p_load(dplyr, magrittr, broom, ggplot2, sf, tidyverse, maps, mapdata, 
+       hrbrthemes, ggthemes, rnaturalearth, urbnmapr)
+```
+
+```{r, echo=FALSE}
+# Load Data
+  # Fatal encounters data
+fatal_encounters <- read.csv("Fatal_Encounters.csv")
+  # Geospatial data for US states
+usa_states <- get_urbn_map("states", sf = TRUE)
+```
+
+```{r, echo=FALSE}
+## Some data wrangling:
+
+# Summarize number of fatal encounters by state
+encs_by_state <- fatal_encounters %>% group_by(State) %>% summarise(n_fat_encs = n())
+encs_by_state <- encs_by_state[-c(1), ] #Get rid of first row
+
+# Add column with population for each state
+encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 5700000, 
+                             3600000, 700000, 1000000, 21500000, 10700000, 1500000,
+                             3200000, 1800000, 12800000, 6800000, 2900000, 4500000,
+                             4700000, 7000000, 6200000, 1400000, 10100000, 5700000,
+                             6200000, 3000000, 1100000, 10400000, 800000, 2000000,
+                             1400000, 9300000, 2100000, 3100000, 20200000, 11800000,
+                             4000000, 4200000, 13000000, 1100000, 5100000, 900000,
+                             6900000, 29100000, 3300000, 8600000, 600000, 7700000,
+                             1800000, 5900000, 60000)
+
+# Calc fatal encounters per 100,000 people
+encs_by_state %<>% mutate(fatalencs_per_100k = (n_fat_encs / state_pop) * 100000)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Set up final dataframe for plotting
+
+# Join  number of fatal encounters by state data with geospatial data
+encs_by_state_geoms <- merge(encs_by_state, usa_states, 
+                             by.x = "State", by.y = "state_abbv")
+
+# Convert new dataframe into an sf object
+spatial_fatalencs <- st_as_sf(encs_by_state_geoms) #%>% st_transform(8857)
+```
+
+```{r, echo=FALSE}
+# Plot
+ggplot() +
+  geom_sf(data = spatial_fatalencs, aes(fill = log(fatalencs_per_100k))) + #, col = "grey40"
+  labs(title = "Victims of Police Violence by State",
+       subtitle = "Fatal encounters per 100,000 people (logged scale)",
+       fill = "Fatalities") +
+  viridis::scale_fill_viridis() +
+ # coord_sf(datum = NA) +
+  cowplot::theme_map()
+```
+
+```{r, echo=FALSE}
+# Plot
+ggplot() +
+  geom_sf(data = spatial_fatalencs, aes(fill = fatalencs_per_100k)) + #, col = "grey40"
+  labs(title = "Victims of Police Violence by State",
+       subtitle = "Fatal encounters per 100,000 people",
+       fill = "Fatalities") +
+  viridis::scale_fill_viridis() +
+  # coord_sf(datum = NA) +
+  cowplot::theme_map()
+```
+
+## Code:
+
+```{r, eval=FALSE}
+library(pacman)
+p_load(dplyr, magrittr, broom, ggplot2, sf, tidyverse, maps, mapdata, 
+       hrbrthemes, ggthemes, rnaturalearth, urbnmapr)
+```
+
+#### Load Data
+
+```{r, eval=FALSE}
+
+  # Fatal encounters data
+fatal_encounters <- read.csv("Fatal_Encounters.csv")
+  # Geospatial data for US states
+usa_states <- get_urbn_map("states", sf = TRUE)
+```
+
+#### Some data wrangling to get fatal encounters in each state per 100,000 people
+
+```{r, eval=FALSE}
+# Summarize number of fatal encounters by state
+encs_by_state <- fatal_encounters %>% group_by(State) %>% summarise(n_fat_encs = n())
+encs_by_state <- encs_by_state[-c(1), ] #Get rid of first row
+
+# Add column with population for each state
+encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 5700000, 
+                             3600000, 700000, 1000000, 21500000, 10700000, 1500000,
+                             3200000, 1800000, 12800000, 6800000, 2900000, 4500000,
+                             4700000, 7000000, 6200000, 1400000, 10100000, 5700000,
+                             6200000, 3000000, 1100000, 10400000, 800000, 2000000,
+                             1400000, 9300000, 2100000, 3100000, 20200000, 11800000,
+                             4000000, 4200000, 13000000, 1100000, 5100000, 900000,
+                             6900000, 29100000, 3300000, 8600000, 600000, 7700000,
+                             1800000, 5900000, 60000)
+
+# Calc fatal encounters per 100,000 people
+encs_by_state %<>% mutate(fatalencs_per_100k = (n_fat_encs / state_pop) * 100000)
+```
+
+#### Set up final dataframe for plotting
+
+```{r, eval=FALSE}
+# Join  number of fatal encounters by state data with geospatial data
+encs_by_state_geoms <- merge(encs_by_state, usa_states, 
+                             by.x = "State", by.y = "state_abbv")
+
+# Convert new dataframe into an sf object
+spatial_fatalencs <- st_as_sf(encs_by_state_geoms) #%>% st_transform(8857)
+```
+
+#### Plotting
+
+-   Plot with logged scale
+
+```{r, eval=FALSE}
+# Plot
+ggplot() +
+  geom_sf(data = spatial_fatalencs, aes(fill = log(fatalencs_per_100k))) + #, col = "grey40"
+  labs(title = "Victims of Police Violence by State",
+       subtitle = "Fatal encounters per 100,000 people (logged scale)",
+       fill = "Fatalities") +
+  viridis::scale_fill_viridis() +
+ # coord_sf(datum = NA) +
+  cowplot::theme_map()
+```
+
+-   Plot with scale in levels
+
+```{r, eval=FALSE}
+# Plot
+ggplot() +
+  geom_sf(data = spatial_fatalencs, aes(fill = fatalencs_per_100k)) + #, col = "grey40"
+  labs(title = "Victims of Police Violence by State",
+       subtitle = "Fatal encounters per 100,000 people",
+       fill = "Fatalities") +
+  viridis::scale_fill_viridis() +
+  # coord_sf(datum = NA) +
+  cowplot::theme_map()
+```
