@@ -100,15 +100,19 @@ ggplot() +
 ```
 
 
-- 
+- Higher rates of police fatal encounters are found predominantly in sun belt states. A possible explanation for this trend is the weather: people are more likely to be outside in areas with warmer climates, which in turn increases the probabilities they'll have an encounter with the police. The exception to this trend is the state of Wisconsin, which actually has the highest rate of fatal police encounters with 25 fatalities per 100,000 people (as a reference, the national average is about 10 fatalities). When considering the social unrest that the state experienced after George Floyd's murder Wisconsin's fatal police encounters are not necessarily a surprise; nevertheless, we cannot determine what the main drivers are for these numbers in the state from this superficial graphical analysis. 
 
-The main state that stands out is Wisconsin, where the number of fatal police encounters for every 100,000 people is about 25 - close to twice the country average of 10 fatalities per 100,0000. An interesting insight is the fatal encounter rate
+- The lowest fatality rates are primarily concentrated in Northeastern states - these numbers are no surprise either as the Northeast is a region characterized by having some of the strictest gun regulations in the country.
 
-No evident political trend
 
+- Conversely, a surprising find is we do not seem to find evidence of an association between fatal encounter rates and political divides. In other words, we don't see any clear trends among blue or red states for higher or lower fatality rates. 
+
+```{r include=FALSE, eval=FALSE}
 Wyoming is likely outlier, smaller population, so a small number of fatal encounters has a big impact. Due to small population it is hard to determine whether the proportionally high fatal encounters with police rate is random, noise or if it is genuinely a state issue.
 
 An important note is the map above uses a logged scale for fatalities per 100,000 people. Due to Wyoming being an outlier state - with over double the number per capita fatalities as the second closest state - it is visually challenging to discern any significant variation among other states when a leveled scale is used. This issue can be seen in the map plotted below. Conversely, the variation among states is more apparent when using a logged scale: we can see in which states the fatalities are lower as a proportion to population and where they are higher. The downside to the log scale is the lack of interpretability of the scale. By comparing the legends from the two maps, we can generally assume the log scale indicates how many times larger the fatality rate is in a given state from the state with the lowest rate. 
+```
+
 
 ```{r log-fig, echo=FALSE}
 # Plot
@@ -138,6 +142,10 @@ ggplot() +
   )
 ```
 
+```{r}
+top_fatal_encs <- encs_by_state %>% arrange(desc(fatalencs_per_100k))
+#top_fatal_encs
+```
 
 
 
