@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo=FALSE)
 
 <!-- badges: end -->
 
-Which US states have the highest per capita fatal police encounters ?
+Is there any evidence of geographical or political trends? Where do we see the highest, and lowest, rates of fatal police encounters?
 
 ```{r pkgs, echo=FALSE}
 library(pacman)
@@ -67,6 +67,49 @@ encs_by_state_geoms <- merge(encs_by_state, usa_states,
 spatial_fatalencs <- st_as_sf(encs_by_state_geoms) #%>% st_transform(8857)
 ```
 
+
+
+
+```{r levels-fig, echo=FALSE}
+# Plot
+ggplot() +
+  geom_sf(data = spatial_fatalencs, aes(fill = fatalencs_per_100k)) + #, col = "grey40"
+  labs(title = "Victims of Police Violence by State",
+       subtitle = "Fatal encounters per 100,000 people",
+       fill = "Fatalities", 
+       caption = "Data: fatalencounters.org") +
+  viridis::scale_fill_viridis(trans = "log", 
+                              breaks = c(3, 5, 10, 15, 25)) +
+  guides(fill = guide_legend(title.position = "top", 
+                             keyheight = unit(3, units = "mm"),
+                             keywidth = unit(12, units = "mm"),
+                             nrow = 1)) +
+  #coord_sf(datum = NA) +
+  cowplot::theme_map() + 
+  theme(plot.background = element_rect(fill = "#f8f8f5", color = NA),
+        panel.background = element_rect(fill = "#f8f8f5", color = NA),
+        #legend.background = element_rect(fill = "", color = NA),
+        plot.title = element_text(size = 18, color = "#494948"),
+        plot.subtitle = element_text(size = 14, color = "#494948"),
+        plot.caption = element_text(size = 8, color = "#494948"),
+        legend.title = element_text(size = 12, color = "#494948"),
+        legend.text = element_text(size = 11, color = "#494948"),
+        legend.position = "bottom",
+        legend.justification = c(1,0)
+  )
+```
+
+
+- 
+
+The main state that stands out is Wisconsin, where the number of fatal police encounters for every 100,000 people is about 25 - close to twice the country average of 10 fatalities per 100,0000. An interesting insight is the fatal encounter rate
+
+No evident political trend
+
+Wyoming is likely outlier, smaller population, so a small number of fatal encounters has a big impact. Due to small population it is hard to determine whether the proportionally high fatal encounters with police rate is random, noise or if it is genuinely a state issue.
+
+An important note is the map above uses a logged scale for fatalities per 100,000 people. Due to Wyoming being an outlier state - with over double the number per capita fatalities as the second closest state - it is visually challenging to discern any significant variation among other states when a leveled scale is used. This issue can be seen in the map plotted below. Conversely, the variation among states is more apparent when using a logged scale: we can see in which states the fatalities are lower as a proportion to population and where they are higher. The downside to the log scale is the lack of interpretability of the scale. By comparing the legends from the two maps, we can generally assume the log scale indicates how many times larger the fatality rate is in a given state from the state with the lowest rate. 
+
 ```{r log-fig, echo=FALSE}
 # Plot
 ggplot() +
@@ -96,44 +139,6 @@ ggplot() +
 ```
 
 
-
-```{r levels-fig, echo=FALSE}
-# Plot
-ggplot() +
-  geom_sf(data = spatial_fatalencs, aes(fill = fatalencs_per_100k)) + #, col = "grey40"
-  labs(title = "Victims of Police Violence by State",
-       subtitle = "Fatal encounters per 100,000 people",
-       fill = "Fatalities", 
-       caption = "Data: fatalencounters.org") +
-  viridis::scale_fill_viridis(trans = "log", 
-                              breaks = c(5, 10, 25, 50, 100)) +
-  guides(fill = guide_legend(title.position = "top", 
-                             keyheight = unit(3, units = "mm"),
-                             keywidth = unit(12, units = "mm"),
-                             nrow = 1)) +
-  #coord_sf(datum = NA) +
-  cowplot::theme_map() + 
-  theme(plot.background = element_rect(fill = "#f8f8f5", color = NA),
-        panel.background = element_rect(fill = "#f8f8f5", color = NA),
-        #legend.background = element_rect(fill = "", color = NA),
-        plot.title = element_text(size = 18, color = "#494948"),
-        plot.subtitle = element_text(size = 14, color = "#494948"),
-        plot.caption = element_text(size = 8, color = "#494948"),
-        legend.title = element_text(size = 12, color = "#494948"),
-        legend.text = element_text(size = 11, color = "#494948"),
-        legend.position = "bottom",
-        legend.justification = c(1,0) # Check how this shows on the knitted doc
-  )
-```
-
-
-- The most salient feature is the fatal police encounter rate in the state of Wyoming, where fatal encounters are 
-
-No evident political trend
-
-Wyoming is likely outlier, smaller population, so a small number of fatal encounters has a big impact. Due to small population it is hard to determine whether the proportionally high fatal encounters with police rate is random, noise or if it is genuinely a state issue.
-
-An important note is the map above uses a logged scale for fatalities per 100,000 people. Due to Wyoming being an outlier state - with over double the number per capita fatalities as the second closest state - it is visually challenging to discern any significant variation among other states when a leveled scale is used. This issue can be seen in the map plotted below. Conversely, the variation among states is more apparent when using a logged scale: we can see in which states the fatalities are lower as a proportion to population and where they are higher. The downside to the log scale is the lack of interpretability of the scale. By comparing the legends from the two maps, we can generally assume the log scale indicates how many times larger the fatality rate is in a given state from the state with the lowest rate. 
 
 
 ## Source

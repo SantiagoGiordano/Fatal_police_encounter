@@ -6,14 +6,17 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-Which US states have the highest per capita fatal police encounters ?
-
-![](README_files/figure-gfm/log-fig-1.png)<!-- -->
+Is there any evidence of geographical or political trends? Where do we
+see the highest, and lowest, rates of fatal police encounters?
 
 ![](README_files/figure-gfm/levels-fig-1.png)<!-- -->
 
--   The most salient feature is the fatal police encounter rate in the
-    state of Wyoming, where fatal encounters are
+-   
+
+The main state that stands out is Wisconsin, where the number of fatal
+police encounters for every 100,000 people is about 25 - close to twice
+the country average of 10 fatalities per 100,0000. An interesting
+insight is the fatal encounter rate
 
 No evident political trend
 
@@ -34,6 +37,8 @@ downside to the log scale is the lack of interpretability of the scale.
 By comparing the legends from the two maps, we can generally assume the
 log scale indicates how many times larger the fatality rate is in a
 given state from the state with the lowest rate.
+
+![](README_files/figure-gfm/log-fig-1.png)<!-- -->
 
 ## Source
 
