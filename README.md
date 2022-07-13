@@ -34,7 +34,17 @@ see the highest, and lowest, rates of fatal police encounters?
     In other words, we don’t see any clear trends among blue or red
     states for higher or lower fatality rates.
 
-![](README_files/figure-gfm/log-fig-1.png)<!-- -->
+## Data
+
+  The raw data is sourced from the Fatal Encounters database. Each
+observation in the data represents one death caused by a police
+intervention or use of force, and it includes variables for demographic
+and geographic characteristics of each incidence, as well as some
+descriptive variables.  
+  I aggregated the observations in the raw data by state to find the
+number of fatal police encounters in each state. Then I adjusted the
+aggregated data for population to generate fatal encounters for every
+100,000 inhabitants in order to do proportional comparisons.
 
 ## Source
 
