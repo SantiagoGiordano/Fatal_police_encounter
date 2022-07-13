@@ -9,9 +9,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 knitr::opts_chunk$set(echo=FALSE)
 ```
 
-# Mapping Fatal Police Encounters by State
+# Mapping Fatal Police Encounters in the US
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 Which US states have the highest per capita fatal police encounters ?
@@ -25,7 +26,7 @@ p_load(dplyr, magrittr, broom, ggplot2, sf, tidyverse, maps, mapdata,
 ```{r data, echo=FALSE}
 # Load Data
   # Fatal encounters data
-fatal_encounters <- read.csv("Data/Fatal_Encounters.csv")
+fatal_encounters <- read.csv(here::here("Data", "Fatal_Encounters.nosync.csv"))
   # Geospatial data for US states
 usa_states <- get_urbn_map("states", sf = TRUE)
 ```
@@ -46,10 +47,13 @@ encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 570000
                              1400000, 9300000, 2100000, 3100000, 20200000, 11800000,
                              4000000, 4200000, 13000000, 1100000, 5100000, 900000,
                              6900000, 29100000, 3300000, 8600000, 600000, 7700000,
-                             1800000, 5900000, 60000)
+                             1800000, 5900000, 600000)
 
 # Calc fatal encounters per 100,000 people
 encs_by_state %<>% mutate(fatalencs_per_100k = (n_fat_encs / state_pop) * 100000)
+
+# Find Country Average per 100k
+#ncs_by_state %>% summarise(mean(fatalencs_per_100k))
 ```
 
 ```{r merge-data, echo=FALSE, warning=FALSE, message=FALSE}
@@ -66,16 +70,32 @@ spatial_fatalencs <- st_as_sf(encs_by_state_geoms) #%>% st_transform(8857)
 ```{r log-fig, echo=FALSE}
 # Plot
 ggplot() +
-  geom_sf(data = spatial_fatalencs, aes(fill = log(fatalencs_per_100k))) + #, col = "grey40"
+  geom_sf(data = spatial_fatalencs, aes(fill = n_fat_encs)) + #, col = "grey40"
   labs(title = "Victims of Police Violence by State",
-       subtitle = "Fatal encounters per 100,000 people (logged scale)",
-       fill = "Fatalities") +
-  viridis::scale_fill_viridis() +
+       subtitle = "Total fatal police encounters",
+       fill = "Fatalities", 
+       caption = "Data: fatalencounters.org") +
+  viridis::scale_fill_viridis(trans = "log", breaks = c(50, 200, 500, 1500, 4000)) +
+  guides(fill = guide_legend(title.position = "top", 
+                             keyheight = unit(3, units = "mm"),
+                             keywidth = unit(12, units = "mm"),
+                             nrow = 1)) +
  # coord_sf(datum = NA) +
-  cowplot::theme_map()
+  cowplot::theme_map() + 
+  theme(plot.background = element_rect(fill = "#f8f8f5", color = NA),
+        panel.background = element_rect(fill = "#f8f8f5", color = NA),
+        #legend.background = element_rect(fill = "", color = NA),
+        plot.title = element_text(size = 18, color = "#494948"),
+        plot.subtitle = element_text(size = 14, color = "#494948"),
+        plot.caption = element_text(size = 8, color = "#494948"),
+        legend.title = element_text(size = 12, color = "#494948"),
+        legend.text = element_text(size = 11, color = "#494948"),
+        legend.position = "bottom",
+        legend.justification = c(1,0)
+  )
 ```
 
-- An important note is the map above uses a logged scale for fatalities per 100,000 people. Due to Wyoming being an outlier state - with over double the number per capita fatalities as the second closest state - it is visually challenging to discern any significant variation among other states when a leveled scale is used. This issue can be seen in the map plotted below. Conversely, the variation among states is more apparent when using a logged scale: we can see in which states the fatalities are lower as a proportion to population and where they are higher. The downside to the log scale is the lack of interpretability of the scale. By comparing the legends from the two maps, we can generally assume the log scale indicates how many times larger the fatality rate is in a given state from the state with the lowest rate. 
+
 
 ```{r levels-fig, echo=FALSE}
 # Plot
@@ -83,12 +103,37 @@ ggplot() +
   geom_sf(data = spatial_fatalencs, aes(fill = fatalencs_per_100k)) + #, col = "grey40"
   labs(title = "Victims of Police Violence by State",
        subtitle = "Fatal encounters per 100,000 people",
-       fill = "Fatalities") +
-  viridis::scale_fill_viridis() +
-  # coord_sf(datum = NA) +
-  cowplot::theme_map()
+       fill = "Fatalities", 
+       caption = "Data: fatalencounters.org") +
+  viridis::scale_fill_viridis(trans = "log", 
+                              breaks = c(5, 10, 25, 50, 100)) +
+  guides(fill = guide_legend(title.position = "top", 
+                             keyheight = unit(3, units = "mm"),
+                             keywidth = unit(12, units = "mm"),
+                             nrow = 1)) +
+  #coord_sf(datum = NA) +
+  cowplot::theme_map() + 
+  theme(plot.background = element_rect(fill = "#f8f8f5", color = NA),
+        panel.background = element_rect(fill = "#f8f8f5", color = NA),
+        #legend.background = element_rect(fill = "", color = NA),
+        plot.title = element_text(size = 18, color = "#494948"),
+        plot.subtitle = element_text(size = 14, color = "#494948"),
+        plot.caption = element_text(size = 8, color = "#494948"),
+        legend.title = element_text(size = 12, color = "#494948"),
+        legend.text = element_text(size = 11, color = "#494948"),
+        legend.position = "bottom",
+        legend.justification = c(1,0) # Check how this shows on the knitted doc
+  )
 ```
 
+
+- The most salient feature is the fatal police encounter rate in the state of Wyoming, where fatal encounters are 
+
+No evident political trend
+
+Wyoming is likely outlier, smaller population, so a small number of fatal encounters has a big impact. Due to small population it is hard to determine whether the proportionally high fatal encounters with police rate is random, noise or if it is genuinely a state issue.
+
+An important note is the map above uses a logged scale for fatalities per 100,000 people. Due to Wyoming being an outlier state - with over double the number per capita fatalities as the second closest state - it is visually challenging to discern any significant variation among other states when a leveled scale is used. This issue can be seen in the map plotted below. Conversely, the variation among states is more apparent when using a logged scale: we can see in which states the fatalities are lower as a proportion to population and where they are higher. The downside to the log scale is the lack of interpretability of the scale. By comparing the legends from the two maps, we can generally assume the log scale indicates how many times larger the fatality rate is in a given state from the state with the lowest rate. 
 
 
 ## Source
