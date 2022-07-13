@@ -5,6 +5,9 @@ format:
   html: 
     self-contained: true
     code-fold: true
+    code-summary: "Show code"
+    code-tools: true
+    smooth-scroll: true
 mainfont: "Avenir Next Condensed"
 editor: visual
 ---
@@ -109,7 +112,7 @@ ggplot() +
 ## Data
 
 #### Packages used: 
-```{r class.source = 'fold-show'}
+```{r class.source = 'fold-show', code-fold : FALSE}
 library(pacman)
 p_load(dplyr, magrittr, broom, ggplot2, sf, tidyverse, maps, mapdata, 
        hrbrthemes, ggthemes, rnaturalearth, urbnmapr)
