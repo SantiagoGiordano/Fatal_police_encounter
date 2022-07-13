@@ -5,8 +5,9 @@ output: github_document
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(collapse = TRUE, comment = "")
 knitr::opts_chunk$set(echo=FALSE)
+
 ```
 
 # Mapping Fatal Police Encounters in the US
@@ -35,7 +36,7 @@ usa_states <- get_urbn_map("states", sf = TRUE)
 ## Some data wrangling:
 
 # Summarize number of fatal encounters by state
-encs_by_state <- fatal_encounters %>% group_by(State) %>% summarise(n_fat_encs = n())
+encs_by_state <- fatal_encounters %>% group_by(State) %>% summarise(n_fatalencs = n())
 encs_by_state <- encs_by_state[-c(1), ] #Get rid of first row
 
 # Add column with population for each state
@@ -49,8 +50,8 @@ encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 570000
                              6900000, 29100000, 3300000, 8600000, 600000, 7700000,
                              1800000, 5900000, 600000)
 
-# Calc fatal encounters per 100,000 people
-encs_by_state %<>% mutate(fatalencs_per_100k = (n_fat_encs / state_pop) * 100000)
+# Calculate fatal encounters per 100,000 people
+encs_by_state %<>% mutate(fatalencs_per_100k = (n_fatalencs / state_pop) * 100000)
 
 # Find Country Average per 100k
 #ncs_by_state %>% summarise(mean(fatalencs_per_100k))
@@ -59,7 +60,7 @@ encs_by_state %<>% mutate(fatalencs_per_100k = (n_fat_encs / state_pop) * 100000
 ```{r merge-data, echo=FALSE, warning=FALSE, message=FALSE}
 # Set up final dataframe for plotting
 
-# Join  number of fatal encounters by state data with geospatial data
+# Join data for number of fatal encounters by state data with geospatial data of US states
 encs_by_state_geoms <- merge(encs_by_state, usa_states, 
                              by.x = "State", by.y = "state_abbv")
 
@@ -106,17 +107,12 @@ ggplot() +
 
 - Conversely, a surprising find is we do not seem to find evidence of an association between fatal encounter rates and political divides. In other words, we don't see any clear trends among blue or red states for higher or lower fatality rates. 
 
-```{r include=FALSE, eval=FALSE}
-Wyoming is likely outlier, smaller population, so a small number of fatal encounters has a big impact. Due to small population it is hard to determine whether the proportionally high fatal encounters with police rate is random, noise or if it is genuinely a state issue.
-
-An important note is the map above uses a logged scale for fatalities per 100,000 people. Due to Wyoming being an outlier state - with over double the number per capita fatalities as the second closest state - it is visually challenging to discern any significant variation among other states when a leveled scale is used. This issue can be seen in the map plotted below. Conversely, the variation among states is more apparent when using a logged scale: we can see in which states the fatalities are lower as a proportion to population and where they are higher. The downside to the log scale is the lack of interpretability of the scale. By comparing the legends from the two maps, we can generally assume the log scale indicates how many times larger the fatality rate is in a given state from the state with the lowest rate. 
-```
 
 
 ```{r log-fig, echo=FALSE, eval=FALSE}
 # Plot
 ggplot() +
-  geom_sf(data = spatial_fatalencs, aes(fill = n_fat_encs)) + #, col = "grey40"
+  geom_sf(data = spatial_fatalencs, aes(fill = n_fatalencs)) + #, col = "grey40"
   labs(title = "Victims of Police Violence by State",
        subtitle = "Total fatal police encounters",
        fill = "Fatalities", 
@@ -147,8 +143,9 @@ top_fatal_encs <- encs_by_state %>% arrange(desc(fatalencs_per_100k))
 ```
 
 ## Data
-|   The raw data is sourced from the Fatal Encounters database. Each observation in the data represents one death caused by a police intervention or use of force, and it includes variables for demographic and geographic characteristics of each incidence, as well as some descriptive variables.
-|   I aggregated the observations in the raw data by state to find the number of fatal police encounters in each state. Then I adjusted the aggregated data for population to generate fatal encounters for every 100,000 inhabitants in order to do proportional comparisons. 
+|   The raw data is sourced from the Fatal Encounters database. Each observation in the data represents one death caused by a police intervention or use of force, and it includes variables for demographic and geographic characteristics of each incidence, as well as some descriptive variables. Additionally, I use the geospatial data for US states provided by the `urbnmapr` package.
+
+|   I aggregated the observations in the raw data by state to find the number of fatal police encounters in each state. Then I adjusted the aggregated data for population to generate fatal encounters for every 100,000 inhabitants in order to do proportional comparisons. Finally, I merge this aggregated data with the geospatial data for US states.
 
 ## Source
 

@@ -40,11 +40,14 @@ see the highest, and lowest, rates of fatal police encounters?
 observation in the data represents one death caused by a police
 intervention or use of force, and it includes variables for demographic
 and geographic characteristics of each incidence, as well as some
-descriptive variables.  
+descriptive variables. Additionally, I use the geospatial data for US
+states provided by the `urbnmapr` package.
+
   I aggregated the observations in the raw data by state to find the
 number of fatal police encounters in each state. Then I adjusted the
 aggregated data for population to generate fatal encounters for every
-100,000 inhabitants in order to do proportional comparisons.
+100,000 inhabitants in order to do proportional comparisons. Finally, I
+merge this aggregated data with the geospatial data for US states.
 
 ## Source
 
