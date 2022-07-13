@@ -1,34 +1,41 @@
 ---
-title: "Masters Project Visualizations"
-subtitle: "EC528 - Crime Economics"
+title: "Mapping Fatal Police Encounters in the US"
 author: "Santiago Giordano"
 format: 
   html: 
     self-contained: true
+    code-fold: true
 mainfont: "Avenir Next Condensed"
 editor: visual
 ---
 
-```{r ,echo=FALSE}
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = NA)
+#knitr::opts_chunk$set(echo=FALSE)
+```
+
+```{r pkgs, echo=FALSE}
 library(pacman)
 p_load(dplyr, magrittr, broom, ggplot2, sf, tidyverse, maps, mapdata, 
        hrbrthemes, ggthemes, rnaturalearth, urbnmapr)
 ```
 
-```{r, echo=FALSE}
+
+```{r load-data, echo=FALSE}
 # Load Data
   # Fatal encounters data
-fatal_encounters <- read.csv("Data/Fatal_Encounters.csv")
+fatal_encounters <- read.csv(here::here("Data", "Fatal_Encounters.nosync.csv"))
   # Geospatial data for US states
 usa_states <- get_urbn_map("states", sf = TRUE)
 ```
 
-```{r, echo=FALSE}
+```{r wrangle-data, echo=FALSE}
 ## Some data wrangling:
 
 # Summarize number of fatal encounters by state
-encs_by_state <- fatal_encounters %>% group_by(State) %>% summarise(n_fat_encs = n())
-encs_by_state <- encs_by_state[-c(1), ] #Get rid of first row
+encs_by_state <- fatal_encounters %>% group_by(State) %>% summarise(n_fatalencs = n())
+# Get rid of first row
+encs_by_state <- encs_by_state[-c(1), ] 
 
 # Add column with population for each state
 encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 5700000, 
@@ -39,16 +46,16 @@ encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 570000
                              1400000, 9300000, 2100000, 3100000, 20200000, 11800000,
                              4000000, 4200000, 13000000, 1100000, 5100000, 900000,
                              6900000, 29100000, 3300000, 8600000, 600000, 7700000,
-                             1800000, 5900000, 60000)
+                             1800000, 5900000, 600000)
 
 # Calc fatal encounters per 100,000 people
-encs_by_state %<>% mutate(fatalencs_per_100k = (n_fat_encs / state_pop) * 100000)
+encs_by_state %<>% mutate(fatalencs_per_100k = (n_fatalencs / state_pop) * 100000)
 ```
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Set up final dataframe for plotting
 
-# Join  number of fatal encounters by state data with geospatial data
+# Join data for number of fatal encounters by state data with geospatial data of US state
 encs_by_state_geoms <- merge(encs_by_state, usa_states, 
                              by.x = "State", by.y = "state_abbv")
 
@@ -56,56 +63,84 @@ encs_by_state_geoms <- merge(encs_by_state, usa_states,
 spatial_fatalencs <- st_as_sf(encs_by_state_geoms) #%>% st_transform(8857)
 ```
 
-```{r, echo=FALSE}
-# Plot
-ggplot() +
-  geom_sf(data = spatial_fatalencs, aes(fill = log(fatalencs_per_100k))) + #, col = "grey40"
-  labs(title = "Victims of Police Violence by State",
-       subtitle = "Fatal encounters per 100,000 people (logged scale)",
-       fill = "Fatalities") +
-  viridis::scale_fill_viridis() +
- # coord_sf(datum = NA) +
-  cowplot::theme_map()
-```
 
-- An important note is the map above uses a logged scale for fatalities per 100,000 people. Due to Wyoming being an outlier state - with over double the number per capita fatalities as the second closest state - it is visually challenging to discern any significant variation among other states when a leveled scale is used. This issue can be seen in the map plotted below. Conversely, the variation among states is more apparent when using a logged scale: we can see in which states the fatalities are lower as a proportion to population and where they are higher. The downside to the log scale is the lack of interpretability of the scale. By comparing the legends from the two maps, we can generally assume the log scale indicates how many times larger the fatality rate is in a given state from the state with the lowest rate. 
+## Visualization
 
-```{r, echo=FALSE}
+Is there any evidence of geographical or political trends? Where do we see the highest, and lowest, rates of fatal police encounters?
+
+```{r main-fig, echo=FALSE}
 # Plot
 ggplot() +
   geom_sf(data = spatial_fatalencs, aes(fill = fatalencs_per_100k)) + #, col = "grey40"
   labs(title = "Victims of Police Violence by State",
        subtitle = "Fatal encounters per 100,000 people",
-       fill = "Fatalities") +
-  viridis::scale_fill_viridis() +
-  # coord_sf(datum = NA) +
-  cowplot::theme_map()
+       fill = "Fatalities", 
+       caption = "Data: fatalencounters.org") +
+  viridis::scale_fill_viridis(trans = "log", 
+                              breaks = c(3, 5, 10, 15, 25)) +
+  guides(fill = guide_legend(title.position = "top", 
+                             keyheight = unit(3, units = "mm"),
+                             keywidth = unit(12, units = "mm"),
+                             nrow = 1)) +
+  #coord_sf(datum = NA) +
+  cowplot::theme_map() + 
+  theme(plot.background = element_rect(fill = "#f8f8f5", color = NA),
+        panel.background = element_rect(fill = "#f8f8f5", color = NA),
+        #legend.background = element_rect(fill = "", color = NA),
+        plot.title = element_text(size = 18, color = "#494948"),
+        plot.subtitle = element_text(size = 14, color = "#494948"),
+        plot.caption = element_text(size = 8, color = "#494948"),
+        legend.title = element_text(size = 12, color = "#494948"),
+        legend.text = element_text(size = 11, color = "#494948"),
+        legend.position = "bottom",
+        legend.justification = c(1,0)
+  )
 ```
 
-## Code:
 
-```{r, eval=FALSE}
+- Higher rates of police fatal encounters are found predominantly in sun belt states. A possible explanation for this trend is the weather: people are more likely to be outside in areas with warmer climates, which in turn increases the probabilities they'll have an encounter with the police. The exception to this trend is the state of Wisconsin, which actually has the highest rate of fatal police encounters with 25 fatalities per 100,000 people (as a reference, the national average is about 10 fatalities). When considering the social unrest that the state experienced after George Floyd's murder Wisconsin's fatal police encounters are not necessarily a surprise; nevertheless, we cannot determine what the main drivers are for these numbers in the state from this superficial graphical analysis. 
+
+- The lowest fatality rates are primarily concentrated in Northeastern states - these numbers are no surprise either as the Northeast is a region characterized by having some of the strictest gun regulations in the country.
+
+- Conversely, a surprising find is we do not seem to find evidence of an association between fatal encounter rates and political divides. In other words, we don't see any clear trends among blue or red states for higher or lower fatality rates. 
+
+
+
+## Data
+
+#### Packages used: 
+```{r class.source = 'fold-show'}
 library(pacman)
 p_load(dplyr, magrittr, broom, ggplot2, sf, tidyverse, maps, mapdata, 
        hrbrthemes, ggthemes, rnaturalearth, urbnmapr)
 ```
 
-#### Load Data
+#### Load data
 
-```{r, eval=FALSE}
+|   The raw data is sourced from the Fatal Encounters database. Each observation in the data represents one death caused by a police intervention or use of force, and it includes variables for demographic and geographic characteristics of each incidence, as well as some descriptive variables. Additionally, I use the geospatial data for US states provided by the `urbnmapr` package.
 
+```{r load-data-2}
+# Load Data
   # Fatal encounters data
-fatal_encounters <- read.csv("Fatal_Encounters.csv")
+fatal_encounters <- read.csv(
+  here::here("Data", "Fatal_Encounters.nosync.csv"))
   # Geospatial data for US states
 usa_states <- get_urbn_map("states", sf = TRUE)
 ```
 
-#### Some data wrangling to get fatal encounters in each state per 100,000 people
+#### Some data wrangling
 
-```{r, eval=FALSE}
+|   I aggregated the observations in the raw data by state to find the number of fatal police encounters in each state. Then I adjusted the aggregated data for population to generate fatal encounters for every 100,000 inhabitants in order to do proportional comparisons. 
+
+```{r wrangle-data-2}
+## Some data wrangling:
+
 # Summarize number of fatal encounters by state
-encs_by_state <- fatal_encounters %>% group_by(State) %>% summarise(n_fat_encs = n())
-encs_by_state <- encs_by_state[-c(1), ] #Get rid of first row
+encs_by_state <- fatal_encounters %>% 
+                      group_by(State) %>% 
+                      summarise(n_fatalencs = n())
+# Get rid of first row
+encs_by_state <- encs_by_state[-c(1), ] 
 
 # Add column with population for each state
 encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 5700000, 
@@ -116,16 +151,26 @@ encs_by_state$state_pop <- c(700000, 5000000, 3000000, 7100000, 39500000, 570000
                              1400000, 9300000, 2100000, 3100000, 20200000, 11800000,
                              4000000, 4200000, 13000000, 1100000, 5100000, 900000,
                              6900000, 29100000, 3300000, 8600000, 600000, 7700000,
-                             1800000, 5900000, 60000)
+                             1800000, 5900000, 600000)
 
-# Calc fatal encounters per 100,000 people
-encs_by_state %<>% mutate(fatalencs_per_100k = (n_fat_encs / state_pop) * 100000)
+# Calculate fatal encounters per 100,000 people
+encs_by_state %<>% mutate(
+    fatalencs_per_100k = (n_fatalencs / state_pop) * 100000)
+
+# Print dataset created
+head(encs_by_state, 5)
+
 ```
+
 
 #### Set up final dataframe for plotting
 
-```{r, eval=FALSE}
-# Join  number of fatal encounters by state data with geospatial data
+|   Finally, I merge this aggregated data with the geospatial data for US states.
+
+```{r merge-data-2, warning=FALSE, message=FALSE}
+# Set up final dataframe for plotting
+
+# Join data for number of fatal encounters by state data with geospatial data of US state
 encs_by_state_geoms <- merge(encs_by_state, usa_states, 
                              by.x = "State", by.y = "state_abbv")
 
@@ -133,35 +178,6 @@ encs_by_state_geoms <- merge(encs_by_state, usa_states,
 spatial_fatalencs <- st_as_sf(encs_by_state_geoms) #%>% st_transform(8857)
 ```
 
-#### Plotting
-
--   Plot with logged scale
-
-```{r, eval=FALSE}
-# Plot
-ggplot() +
-  geom_sf(data = spatial_fatalencs, aes(fill = log(fatalencs_per_100k))) + #, col = "grey40"
-  labs(title = "Victims of Police Violence by State",
-       subtitle = "Fatal encounters per 100,000 people (logged scale)",
-       fill = "Fatalities") +
-  viridis::scale_fill_viridis() +
- # coord_sf(datum = NA) +
-  cowplot::theme_map()
-```
-
--   Plot with scale in levels
-
-```{r, eval=FALSE}
-# Plot
-ggplot() +
-  geom_sf(data = spatial_fatalencs, aes(fill = fatalencs_per_100k)) + #, col = "grey40"
-  labs(title = "Victims of Police Violence by State",
-       subtitle = "Fatal encounters per 100,000 people",
-       fill = "Fatalities") +
-  viridis::scale_fill_viridis() +
-  # coord_sf(datum = NA) +
-  cowplot::theme_map()
-```
 
 
 ## Source
